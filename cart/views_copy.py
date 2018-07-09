@@ -1,0 +1,35 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
+from shop.models import Product
+from .cart import Cart
+from .forms import CartAddProductForm
+
+@require_POST
+def CartAdd(request, product_id):
+    cart = Cart(request)
+    product = get_object_or_404(Product, id=product_id)
+    cart_product_form = CartAddProductForm()
+    if cart_product_form.is_valid():
+        cd = cart_product_form.cleaned_data
+        cart.add(product=product, quantity=cd['quantity'],
+                                  update_quantity=cd['update'])
+    context = {'product': product, 'cart_product_form': cart_product_form}
+    return render(request, 'shop/product/detail.html', context)
+
+def CartRemove(request, product_id):
+    cart = Cart(request)
+    product = get_object_or_404(Product, id=product_id)
+    cart.remove(product)
+    return redirect('cart:CartDetail')
+
+def CartDetail(request):
+    cart = Cart(request)
+    return render(request, 'cart/detail.html', {'cart': cart})
+"""
+def ProductDetail(request, id, slug):
+    product = get_object_or_404(Product, id=id, slug=slug, available=True)
+    cart_product_form = CartAddProductForm()
+    context = {'product': product, 'cart_product_form': cart_product_form}
+    context.update(csrf(request))
+    return render_to_response('shop/detail.html', context)
+"""
